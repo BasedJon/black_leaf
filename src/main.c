@@ -120,10 +120,13 @@ void loop(window* win, project* project) {
 
         while (SDL_PollEvent(&win->event)) {
             if (win->event.type == SDL_EVENT_KEY_DOWN) {
+                if (win->keystate[SDL_SCANCODE_ESCAPE] == true) { running = false; }
                 if (win->keystate[SDL_SCANCODE_ESCAPE] == true) running = false;
                 if (win->keystate[SDL_SCANCODE_1] == true) control_debug_speed = 0.05;
                 if (win->keystate[SDL_SCANCODE_2] == true) control_debug_speed += 10;
                 if (win->keystate[SDL_SCANCODE_3] == true) debug_bool = !debug_bool;
+            } else if (win->event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
+                running = false;
             }
             
         }
