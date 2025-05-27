@@ -11,11 +11,11 @@ vertex_buffer dvb;
 uint32_t* dvb_indices = NULL;
 uint32_t dvb_indices_count;
 mat4 debug_model;
-const char* debug_mesh = "obj_data/cube.obj";
+const char* debug_mesh = "obj_data/sponza.obj";
 
 camera debug_cam = {
-{ 0.0f, 0.0f, 10.0f },
-{ 0.0f, 0.0f, 0.0f },
+{ 0.0f, 0.0f, 10000.0f },
+{ 0.0f, 0.0f, -1.0f },
 { 0.0f, 1.0f, 0.0f },
 };
 
@@ -40,14 +40,11 @@ void debug_render(window* win) {
         vb = mat4_vec4_mult(&debug_cam.projection, vb);
         vc = mat4_vec4_mult(&debug_cam.projection, vc);
 
-        // back cull
-        // normals
-        // clipping
+        if (triangle_backface_cull(va, vb, vc)) continue;
 
         vec3 va_viewport = ndc_to_viewport(vec4_to_ndc(va), win->w, win->h);
         vec3 vb_viewport = ndc_to_viewport(vec4_to_ndc(vb), win->w, win->h);
         vec3 vc_viewport = ndc_to_viewport(vec4_to_ndc(vc), win->w, win->h);
-
         draw_line(va_viewport.x, va_viewport.y, vb_viewport.x, vb_viewport.y, &win->pixel_buffer, line_color, win->w, win->h);
         draw_line(vb_viewport.x, vb_viewport.y, vc_viewport.x, vc_viewport.y, &win->pixel_buffer, line_color, win->w, win->h);
         draw_line(vc_viewport.x, vc_viewport.y, va_viewport.x, va_viewport.y, &win->pixel_buffer, line_color, win->w, win->h);
@@ -73,36 +70,37 @@ void debug_controls(float speed, window* win) {
         debug_model = mat4_mult(&debug_model, &pitch_matrix);
     }
 
-    if (win->keystate[SDL_SCANCODE_D] == true) {
-        vec3 translation_values = {-speed * 0.5, 0.0f, 0.0f};
-        mat4 translation_matrix = mat4_translation(translation_values);
-        debug_model = mat4_mult(&debug_model, &translation_matrix);
+    if (win->keystate[SDL_SCANCODE_W]) {
+        vec3 forward = vec3_normalize(debug_cam.target);
+        debug_cam.pos = vec3_add(debug_cam.pos, vec3_scalar(forward, speed));
     }
-    if (win->keystate[SDL_SCANCODE_A] == true) {
-        vec3 translation_values = {speed * 0.5, 0.0f, 0.0f};
-        mat4 translation_matrix = mat4_translation(translation_values);
-        debug_model = mat4_mult(&debug_model, &translation_matrix);
+    if (win->keystate[SDL_SCANCODE_S]) {
+        vec3 backward = vec3_normalize(debug_cam.target);
+        debug_cam.pos = vec3_add(debug_cam.pos, vec3_scalar(backward, -speed));
     }
-    if (win->keystate[SDL_SCANCODE_LSHIFT] == true) {
-        vec3 translation_values = {0.0f, -speed * 0.5, 0.0f};
-        mat4 translation_matrix = mat4_translation(translation_values);
-        debug_model = mat4_mult(&debug_model, &translation_matrix);
+    if (win->keystate[SDL_SCANCODE_D]) {
+        vec3 right = vec3_normalize(debug_cam.right);
+        debug_cam.pos = vec3_add(debug_cam.pos, vec3_scalar(right, speed));
     }
-    if (win->keystate[SDL_SCANCODE_SPACE] == true) {
-        vec3 translation_values = {0.0f, speed * 0.5, 0.0f};
-        mat4 translation_matrix = mat4_translation(translation_values);
-        debug_model = mat4_mult(&debug_model, &translation_matrix);
+    if (win->keystate[SDL_SCANCODE_A]) {
+        vec3 left = vec3_normalize(debug_cam.right);
+        debug_cam.pos = vec3_add(debug_cam.pos, vec3_scalar(left, -speed));
     }
-    if (win->keystate[SDL_SCANCODE_W] == true) {
-        vec3 translation_values = {0.0f, 0.0f, -speed * 0.5};
-        mat4 translation_matrix = mat4_translation(translation_values);
-        debug_model = mat4_mult(&debug_model, &translation_matrix);
+    if (win->keystate[SDL_SCANCODE_SPACE]) {
+        vec3 up = vec3_normalize(debug_cam.up);
+        debug_cam.pos = vec3_add(debug_cam.pos, vec3_scalar(up, speed));
     }
-    if (win->keystate[SDL_SCANCODE_S] == true) {
-        vec3 translation_values = {0.0f, 0.0f, speed * 0.5};
-        mat4 translation_matrix = mat4_translation(translation_values);
-        debug_model = mat4_mult(&debug_model, &translation_matrix);
+    if (win->keystate[SDL_SCANCODE_LSHIFT]) {
+        vec3 down = vec3_normalize(debug_cam.up);
+        debug_cam.pos = vec3_add(debug_cam.pos, vec3_scalar(down, -speed));
     }
+
+    vec3 forward = vec3_normalize(debug_cam.target);
+    vec3 world_up = {0.0f, 1.0f, 0.0f};
+    debug_cam.right = vec3_normalize(vec3_cross(forward, world_up));
+    debug_cam.up = vec3_cross(debug_cam.right, forward);
+    vec3 center = vec3_add(debug_cam.pos, forward);
+    debug_cam.view = mat4_view(debug_cam.pos, center, debug_cam.up);
 }
 
 
@@ -112,22 +110,25 @@ void loop(window* win, project* project) {
     size_t ticks_end = SDL_GetTicks();
     size_t ticks_counter = 0;
 
+    float control_debug_speed = 0.05;
+
     while (running) {
         ticks_start = SDL_GetTicks();
 
         while (SDL_PollEvent(&win->event)) {
             if (win->event.type == SDL_EVENT_KEY_DOWN) {
-                if (win->keystate[SDL_SCANCODE_ESCAPE] == true) {
-                running = false;
-                }
+                if (win->keystate[SDL_SCANCODE_ESCAPE] == true) running = false;
+                if (win->keystate[SDL_SCANCODE_1] == true) control_debug_speed = 0.05;
+                if (win->keystate[SDL_SCANCODE_2] == true) control_debug_speed += 10;
             }
+            
         }
 
         memset(win->pixel_buffer, 0, win->w * win->h * sizeof(uint32_t));
 
         ticks_counter += ticks_start - ticks_end;
         if (ticks_counter >= project->tick_rate) {
-            debug_controls(0.05, win);
+            debug_controls(control_debug_speed, win);
             ticks_counter = 0;
         }
         debug_render(win);

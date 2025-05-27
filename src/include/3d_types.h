@@ -13,13 +13,13 @@ typedef union {
 } vec2;
 typedef union {
     struct { float x, y, z; };
-    struct { float x, y; } xy;
+    struct { vec2 xy; };
     float i[3];
 } vec3;
 typedef union {
     struct { float x, y, z, w; };
-    struct { float x, y; } xy;
-    struct { float x, y, z; } xyz;
+    struct { vec2 xy; };
+    struct { vec3 xyz; };
     float i[4];
 } vec4;
 typedef struct {
