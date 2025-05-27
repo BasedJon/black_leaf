@@ -118,8 +118,10 @@ void loop(window* win, project* project) {
         while (SDL_PollEvent(&win->event)) {
             if (win->event.type == SDL_EVENT_KEY_DOWN) {
                 if (win->keystate[SDL_SCANCODE_ESCAPE] == true) {
-                running = false;
+                    running = false;
                 }
+            } else if (win->event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
+                running = false;
             }
         }
 
