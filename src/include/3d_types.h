@@ -26,6 +26,9 @@ typedef struct {
     float m[9];
 } mat3;
 typedef struct {
+    float m[12];
+} mat3x4; // TO DO: add math funcs for this mat
+typedef struct {
     float m[16];
 } mat4;
 

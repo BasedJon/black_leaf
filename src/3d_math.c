@@ -76,10 +76,10 @@ float vec4_dot(vec4 a, vec4 b) {
 }
 // vec length
 float vec2_length(vec2 v) {
-    return sqrtf(v.x * v.x + v.y * v.y);
+    return sqrtf(v.x * v.x + v.y * v.y); // TO DO: optimize sqrt maybe
 }
 float vec3_length(vec3 v) {
-    return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z); // TO DO: optimize sqrt maybe
 }
 // vec center
 vec2 vec2_center(vec2 a, vec2 b) {
@@ -98,7 +98,7 @@ vec3 vec3_center(vec3 a, vec3 b, vec3 c) {
 // vec normalize
 vec2 vec2_normalize(vec2 v) {
     vec2 result;
-    float length = sqrtf(v.x * v.x + v.y * v.y);
+    float length = sqrtf(v.x * v.x + v.y * v.y); // TO DO: optimize sqrt maybe
     if (length < 1e-6f) {
         result.x = 0.0f;
         result.y = 0.0f;
@@ -110,7 +110,7 @@ vec2 vec2_normalize(vec2 v) {
 }
 vec3 vec3_normalize(vec3 v) {
     vec3 result;
-    float length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    float length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z); // TO DO: optimize sqrt maybe
     if (length < 1e-6f) {
         result.x = 0.0f;
         result.y = 0.0f;
@@ -158,7 +158,7 @@ vec3 vec3_direction(vec3 from, vec3 to) {
     result.x = to.x - from.x;
     result.y = to.y - from.y;
     result.z = to.z - from.z;
-    float length = sqrtf(result.x * result.x + result.y * result.y + result.z * result.z);
+    float length = sqrtf(result.x * result.x + result.y * result.y + result.z * result.z); // TO DO: optimize sqrt maybe
     if (length < 1e-6f) {
         result.x = 0.0f;
         result.y = 0.0f;
@@ -250,7 +250,7 @@ mat4 mat4_transpose(const mat4* m) {
     return result;
 }
 // mat multiplication
-mat4 mat4_mult(const mat4* a, const mat4* b) {
+mat4 mat4_mult(const mat4* a, const mat4* b) { // TO DO: cache the matrix 
     mat4 result;
     result.m[0] = a->m[0] * b->m[0] + a->m[1] * b->m[4] + a->m[2] * b->m[8] + a->m[3] * b->m[12];
     result.m[1] = a->m[0] * b->m[1] + a->m[1] * b->m[5] + a->m[2] * b->m[9] + a->m[3] * b->m[13];
@@ -271,7 +271,7 @@ mat4 mat4_mult(const mat4* a, const mat4* b) {
     return result;
 }
 // mat inverse
-mat3 mat3_inverse(const mat3* m) {
+mat3 mat3_inverse(const mat3* m) { // TO DO: is this effeicent?
     mat3 result;
     float m0 = m->m[0];
     float m3 = m->m[3];
@@ -303,7 +303,7 @@ mat3 mat3_inverse(const mat3* m) {
     result.m[8] =  c8 * inverse_determinant;
     return result;
 }
-mat4 mat4_inverse(const mat4* m) {
+mat4 mat4_inverse(const mat4* m) { // TO DO: is this effeicent?
     mat4 result;
     float m0 = m->m[0];
     float m4 = m->m[4];
@@ -376,7 +376,7 @@ mat4 mat4_view(vec3 pos, vec3 target, vec3 up) {
     result.m[15] = 1.0f;
     return result;
 }
-mat4 mat4_perspective(float fov, float aspect, float near, float far) {
+mat4 mat4_perspective(float fov, float aspect, float near, float far) { // TO DO: is tan fast enough?
     mat4 result = {0.0f};
     float tangent_half_fov = tan(fov / 2.0f);
     result.m[0]  = 1.0f / (aspect * tangent_half_fov);
@@ -411,7 +411,7 @@ mat4 mat4_translation(vec3 translation) {
     result.m[14] = translation.z;
     return result;
 }
-mat4 mat4_rotate_yaw(float angle_radians) {
+mat4 mat4_rotate_yaw(float angle_radians) { // TO DO: is cos/sin fast enough?
     mat4 result = mat4_identity();
     float cos_angle = cosf(angle_radians);
     float sin_angle = sinf(angle_radians);
@@ -421,7 +421,7 @@ mat4 mat4_rotate_yaw(float angle_radians) {
     result.m[10] = cos_angle;
     return result;
 }
-mat4 mat4_rotate_pitch(float angle_radians) {
+mat4 mat4_rotate_pitch(float angle_radians) { // TO DO: is cos/sin fast enough?
     mat4 result = mat4_identity();
     float cos_angle = cosf(angle_radians);
     float sin_angle = sinf(angle_radians);
@@ -442,7 +442,7 @@ mat4 mat4_rotate_roll(float angle_radians) {
     return result;
 }
 // vec4 to ndc
-vec3 vec4_to_ndc(vec4 v) {
+vec3 vec4_to_ndc(vec4 v) { // probs not in math lib
     vec3 result;
     result.x = v.x / v.w;
     result.y = v.y / v.w;
@@ -450,7 +450,7 @@ vec3 vec4_to_ndc(vec4 v) {
     return result;
 }
 // ndc to viewport
-vec3 ndc_to_viewport(const vec3 ndc, uint32_t viewport_width, uint32_t viewport_height) {
+vec3 ndc_to_viewport(const vec3 ndc, uint32_t viewport_width, uint32_t viewport_height) { // probs not in math lib
     vec3 result;
     result.x = (ndc.x + 1.0f) * 0.5f * viewport_width;
     result.y = (1.0f - ndc.y) * 0.5f * viewport_height;
@@ -458,7 +458,7 @@ vec3 ndc_to_viewport(const vec3 ndc, uint32_t viewport_width, uint32_t viewport_
     return result;
 }
 // triangle backface culling (using winding order)
-bool triangle_backface_cull(vec4 a, vec4 b, vec4 c) {
+bool triangle_backface_cull(vec4 a, vec4 b, vec4 c) { // probs not in math lib
     a.x = a.x / a.w;
     a.y = a.y / a.w;
     a.z = a.z / a.w;
@@ -471,14 +471,14 @@ bool triangle_backface_cull(vec4 a, vec4 b, vec4 c) {
     return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0.0f;
 }
 // triangle normal
-vec3 triangle_normal (vec3 a, vec3 b, vec3 c) {
+vec3 triangle_normal (vec3 a, vec3 b, vec3 c) { // probs not in math lib
     vec3 ba = vec3_sub(b, a);
     vec3 ca = vec3_sub(c, a);
     vec3 result = vec3_normalize(vec3_cross(ba, ca));
     return result;
 }
 // find singed distance for clipping
-float vec4_signed_clip_plane_distance(vec4 v, uint8_t plane_index) {
+float vec4_signed_clip_plane_distance(vec4 v, uint8_t plane_index) { // probs not in math lib
     switch (plane_index) {
     case 0: return v.x + v.w;  // x >= -w
     case 1: return v.w - v.x;  // x <= w

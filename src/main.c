@@ -12,6 +12,7 @@ uint32_t* dvb_indices = NULL;
 uint32_t dvb_indices_count;
 mat4 debug_model;
 const char* debug_mesh = "obj_data/sponza.obj";
+bool debug_bool = true;
 
 camera debug_cam = {
 { 0.0f, 0.0f, 10000.0f },
@@ -40,7 +41,9 @@ void debug_render(window* win) {
         vb = mat4_vec4_mult(&debug_cam.projection, vb);
         vc = mat4_vec4_mult(&debug_cam.projection, vc);
 
-        if (triangle_backface_cull(va, vb, vc)) continue;
+        if (debug_bool) {
+        if (triangle_backface_cull(va, vb, vc)) continue; 
+        }
 
         vec3 va_viewport = ndc_to_viewport(vec4_to_ndc(va), win->w, win->h);
         vec3 vb_viewport = ndc_to_viewport(vec4_to_ndc(vb), win->w, win->h);
@@ -120,6 +123,7 @@ void loop(window* win, project* project) {
                 if (win->keystate[SDL_SCANCODE_ESCAPE] == true) running = false;
                 if (win->keystate[SDL_SCANCODE_1] == true) control_debug_speed = 0.05;
                 if (win->keystate[SDL_SCANCODE_2] == true) control_debug_speed += 10;
+                if (win->keystate[SDL_SCANCODE_3] == true) debug_bool = !debug_bool;
             }
             
         }
