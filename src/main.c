@@ -7,15 +7,16 @@
 #include "graphics_pipeline.h"
 #include "project.h"
 
+float* z_buffer;
 vertex_buffer dvb;
 uint32_t* dvb_indices = NULL;
 uint32_t dvb_indices_count;
 mat4 debug_model;
-const char* debug_mesh = "obj_data/sponza.obj";
+const char* debug_mesh = "obj_data/cube.obj";
 bool debug_bool = true;
 
 camera debug_cam = {
-{ 0.0f, 0.0f, 10000.0f },
+{ 0.0f, 0.0f, 10.0f },
 { 0.0f, 0.0f, -1.0f },
 { 0.0f, 1.0f, 0.0f },
 };
@@ -45,12 +46,28 @@ void debug_render(window* win) {
         if (triangle_backface_cull(va, vb, vc)) continue; 
         }
 
-        vec3 va_viewport = ndc_to_viewport(vec4_to_ndc(va), win->w, win->h);
-        vec3 vb_viewport = ndc_to_viewport(vec4_to_ndc(vb), win->w, win->h);
-        vec3 vc_viewport = ndc_to_viewport(vec4_to_ndc(vc), win->w, win->h);
-        draw_line(va_viewport.x, va_viewport.y, vb_viewport.x, vb_viewport.y, &win->pixel_buffer, line_color, win->w, win->h);
-        draw_line(vb_viewport.x, vb_viewport.y, vc_viewport.x, vc_viewport.y, &win->pixel_buffer, line_color, win->w, win->h);
-        draw_line(vc_viewport.x, vc_viewport.y, va_viewport.x, va_viewport.y, &win->pixel_buffer, line_color, win->w, win->h);
+        vec4* polygon_out;
+        int clipped_count = triangle_clip(va, vb, vc, &polygon_out);
+
+       if (clipped_count > 0 && polygon_out) {
+        for (int i = 1; i < clipped_count - 1; i++) {
+            vec4 v0 = polygon_out[0];
+            vec4 v1 = polygon_out[i];
+            vec4 v2 = polygon_out[i + 1];
+
+            vec3 v0_vp = ndc_to_viewport(vec4_to_ndc(v0), win->w, win->h);
+            vec3 v1_vp = ndc_to_viewport(vec4_to_ndc(v1), win->w, win->h);
+            vec3 v2_vp = ndc_to_viewport(vec4_to_ndc(v2), win->w, win->h);
+
+            
+            draw_line(v0_vp.x, v0_vp.y, v1_vp.x, v1_vp.y, &win->pixel_buffer, line_color, win->w, win->h);
+            draw_line(v1_vp.x, v1_vp.y, v2_vp.x, v2_vp.y, &win->pixel_buffer, line_color, win->w, win->h);
+            draw_line(v2_vp.x, v2_vp.y, v0_vp.x, v0_vp.y, &win->pixel_buffer, line_color, win->w, win->h);
+
+            draw_triangle(v0_vp, v1_vp, v2_vp, win, &win->pixel_buffer, z_buffer, win->w, win->h);
+        }
+        free(polygon_out);
+        }
     }
 }
 
@@ -132,6 +149,7 @@ void loop(window* win, project* project) {
         }
 
         memset(win->pixel_buffer, 0, win->w * win->h * sizeof(uint32_t));
+        memset(z_buffer, 0, win->w * win->h * sizeof(float));
 
         ticks_counter += ticks_start - ticks_end;
         if (ticks_counter >= project->tick_rate) {
@@ -165,8 +183,8 @@ int main(int argc, char* argv[]) {
 
     float fov = 40 * (PI / 180.0f);
     float aspect = (float)window.w / (float)window.h;
-    float near = 0.0f;
-    float far = 100.0f;
+    float near = 0.1f;
+    float far = 10.0f;
 
     debug_cam.view = mat4_view(debug_cam.pos, debug_cam.target, debug_cam.up);
     debug_cam.projection = mat4_perspective(fov, aspect, near, far);
@@ -175,5 +193,6 @@ int main(int argc, char* argv[]) {
     int result = obj_parse(debug_mesh, &dvb, &dvb_indices, &dvb_indices_count);
     if (result < 0) fprintf(stderr, "ERROR: obj_parse failed to load cube.obj.\n"); 
 
+    z_buffer = (float*)malloc(window.h * window.w * sizeof(float));
     loop(&window, &project);
 }

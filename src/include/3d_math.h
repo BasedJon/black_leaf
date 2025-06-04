@@ -55,3 +55,4 @@ vec3 ndc_to_viewport(const vec3 ndc, uint32_t viewport_width, uint32_t viewport_
 bool triangle_backface_cull(vec4 a, vec4 b, vec4 c);
 vec3 triangle_normal(vec3 a, vec3 b, vec3 c);
 float vec4_signed_clip_plane_distance(vec4 v, uint8_t plane_index);
+int triangle_clip(vec4 a, vec4 b, vec4 c, vec4** polygon_out);

@@ -40,8 +40,14 @@ typedef enum vertex_attribute_type {
     ATTRIBUTE_COLOR    = 3,
     ATTRIBUTE_TANGENT  = 4,
 } vertex_attribute_type;
+typedef enum data_types {
+    FLOAT = 0,
+    INT   = 1,
+    UINT  = 2,
+} data_types;
 typedef struct {
     uint32_t type;
+    uint32_t data_type;
     uint32_t dimension;
     size_t offset;
     uint32_t binding;

@@ -489,3 +489,59 @@ float vec4_signed_clip_plane_distance(vec4 v, uint8_t plane_index) { // probs no
     default: return 0.0f;
     }
 }
+// clipping
+int triangle_clip(vec4 a, vec4 b, vec4 c, vec4** polygon_out) {
+    vec4* polygon_out_temp = (vec4*)malloc(6 * sizeof(vec4));
+    if (!polygon_out_temp) { fprintf(stderr, "ERROR: triangle_clip failed at malloc polygon_out_temp.\n"); return -1; }
+    vec4* polygon_clipped = (vec4*)malloc(6 * sizeof(vec4));
+    polygon_out_temp[0] = a;
+    polygon_out_temp[1] = b;
+    polygon_out_temp[2] = c;
+    if (!polygon_clipped) { fprintf(stderr, "ERROR: triangle_clip failed at malloc polygon_clipped.\n"); free(polygon_out_temp); return -1; }
+    float edge_a_fval, edge_b_fval, interpolation_factor;
+    bool edge_a_inorout, edge_b_inorout;
+    vec4 edge_a, edge_b, intersect;
+    size_t polygon_size = 3, clipped_index = 0;
+    int axis, sign;
+
+    for (size_t plane_index = 0, plane_count = 6; plane_index < plane_count; plane_index++) {
+    axis = plane_index / 2;
+    if (plane_index % 2 == 0) sign = +1; else sign = -1;
+        for (size_t vertex_index = 0; vertex_index < polygon_size; vertex_index++) {
+            edge_a = polygon_out_temp[vertex_index];
+            edge_b = polygon_out_temp[(vertex_index + 1) % polygon_size];
+            edge_a_fval = sign * edge_a.i[axis] + edge_a.w;
+            edge_b_fval = sign * edge_b.i[axis] + edge_b.w;
+            interpolation_factor = edge_a_fval / (edge_a_fval - edge_b_fval);
+            edge_a_inorout = edge_a_fval >= 0.0f;
+            edge_b_inorout = edge_b_fval >= 0.0f;
+
+            if (edge_a_inorout && edge_b_inorout) { polygon_clipped[clipped_index] = edge_b; clipped_index++; }
+            else if (!edge_a_inorout && !edge_b_inorout) continue;
+            else if (edge_a_inorout && !edge_b_inorout) {
+                // TO DO: add logic to interpolate all the atributes
+                intersect = vec4_interpolate(edge_a, edge_b, interpolation_factor);
+                polygon_clipped[clipped_index] = intersect;
+                clipped_index++;
+            }
+            else if (!edge_a_inorout && edge_b_inorout) {
+                // TO DO: add logic to interpolate all the atributes
+                intersect = vec4_interpolate(edge_a, edge_b, interpolation_factor);
+                polygon_clipped[clipped_index] = intersect;
+                clipped_index++;
+                polygon_clipped[clipped_index] = edge_b;
+                clipped_index++;
+            }
+        } 
+        polygon_size = clipped_index;
+        clipped_index = 0;
+        vec4* temp_ptr = polygon_out_temp;
+        polygon_out_temp = polygon_clipped;
+        polygon_clipped = temp_ptr;
+        memset(polygon_clipped, 0, 6 * sizeof(vec4));
+    }
+
+    *polygon_out = polygon_out_temp;
+    free(polygon_clipped);
+    return polygon_size;
+}
