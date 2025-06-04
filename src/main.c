@@ -60,11 +60,10 @@ void debug_render(window* win) {
             vec3 v2_vp = ndc_to_viewport(vec4_to_ndc(v2), win->w, win->h);
 
             
+            draw_triangle(v0_vp, v1_vp, v2_vp, win, &win->pixel_buffer, z_buffer, win->w, win->h);
             draw_line(v0_vp.x, v0_vp.y, v1_vp.x, v1_vp.y, &win->pixel_buffer, line_color, win->w, win->h);
             draw_line(v1_vp.x, v1_vp.y, v2_vp.x, v2_vp.y, &win->pixel_buffer, line_color, win->w, win->h);
             draw_line(v2_vp.x, v2_vp.y, v0_vp.x, v0_vp.y, &win->pixel_buffer, line_color, win->w, win->h);
-
-            draw_triangle(v0_vp, v1_vp, v2_vp, win, &win->pixel_buffer, z_buffer, win->w, win->h);
         }
         free(polygon_out);
         }
